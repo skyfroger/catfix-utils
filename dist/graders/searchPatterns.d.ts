@@ -1,0 +1,14 @@
+export declare const foreverLoopRE: RegExp;
+export declare const countLoopRE: RegExp;
+export declare const untilLoopRE: RegExp;
+export declare const ifThenRE: RegExp;
+export declare const ifThenElseRE: RegExp;
+export declare const compConditionsRE: RegExp;
+export declare const setVarsRE: RegExp;
+export declare const roundVarsRE: RegExp;
+export declare const scriptsWithKeyPressEvent: RegExp;
+export declare const cloneSpriteRE: RegExp;
+export declare const waitSecondsRE: RegExp;
+export declare const waitCondAndBackdropRE: RegExp;
+export declare const mouseInteractionRE: RegExp;
+export declare const videoInteractionRE: RegExp;
