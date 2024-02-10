@@ -245,14 +245,6 @@ function abstractGrader(project: Project): graderResult {
         maxGrade: gradesEnum.three,
     };
 
-    // получаем список спрайтов у которых больше одного скрипта
-    //   const spritesWithManyScripts = project.sprites.filter((sp) => {
-    //     return sp.scripts.length > 1;
-    //   });
-    //   if (spritesWithManyScripts.length > 0) {
-    //     g.grade = gradesEnum.one;
-    //   }
-
     // есть ли собственные блоки, которые вызываются больше одного раза
     let customBlocksUsageCount: boolean[] = [];
 
