@@ -1,4 +1,4 @@
-import { parseProject, grader } from "./src/index.ts";
+import { parseProject, grader, scanForWarnings } from "./src/index.ts";
 import { ScratchProject } from "./src/scratch.ts";
 
 import {
@@ -6,9 +6,11 @@ import {
     customBlockUsed,
     clonesUsed,
     customBlockWithParams,
+    longScriptNoComments,
 } from "./mock_projects/index.ts";
 
-const p = customBlockWithParams as unknown;
+const p = longScriptNoComments as unknown;
 const parsedP = parseProject(p as ScratchProject);
 
-console.log(grader(parsedP));
+//console.log(grader(parsedP));
+console.log(scanForWarnings(parsedP, p as ScratchProject));
