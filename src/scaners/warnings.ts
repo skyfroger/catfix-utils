@@ -42,12 +42,25 @@ export const emptySprite: tipFunctionInterface = (project, projectJSON) => {
 export const noComments: tipFunctionInterface = (project, projectJSON) => {
     let result: Tip[] = [];
 
+    // считаем, что скрипт длиной 20 блоков должен обладать комментарием
+    const LONG_SCRIPT_LENGTH = 20;
+
     // сначала проверяем сцену...
     // если на сцене есть скрипты, но нет ни одного комментария
-    if (project.stage.scripts.length !== 0 && !project.stage.comments) {
+
+    // находим длину самого большого скрипта
+    const maxScriptLength = Math.max(
+        ...project.stage.scripts.map((s) => s.split("\n").length),
+        0
+    );
+
+    if (maxScriptLength >= LONG_SCRIPT_LENGTH && !project.stage.comments) {
         result.push({
             code: null,
-            payload: { target: project.stage.name },
+            payload: {
+                target: project.stage.name,
+                maxLength: String(maxScriptLength),
+            },
             type: "warning",
             title: "warning.noCommentsTitle",
             message: "warning.noComments",
@@ -56,10 +69,20 @@ export const noComments: tipFunctionInterface = (project, projectJSON) => {
 
     // потом спрайты
     project.sprites.forEach((sp) => {
-        if (sp.scripts.length !== 0 && !sp.comments) {
+        // находим длину самого большого скрипта
+        //console.log(sp.name, sp.scripts);
+        const maxScriptLength = Math.max(
+            ...sp.scripts.map((s) => s.split("\n").length),
+            0
+        );
+
+        if (maxScriptLength >= LONG_SCRIPT_LENGTH && !sp.comments) {
             result.push({
                 code: null,
-                payload: { target: sp.name },
+                payload: {
+                    target: sp.name,
+                    maxLength: String(maxScriptLength),
+                },
                 type: "warning",
                 title: "warning.noCommentsTitle",
                 message: "warning.noComments",
