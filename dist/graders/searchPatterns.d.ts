@@ -12,3 +12,4 @@ export declare const waitSecondsRE: RegExp;
 export declare const waitCondAndBackdropRE: RegExp;
 export declare const mouseInteractionRE: RegExp;
 export declare const videoInteractionRE: RegExp;
+export declare const loudnessTimerBgChangeRE: RegExp;

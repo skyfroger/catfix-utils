@@ -54,3 +54,9 @@ export const mouseInteractionRE = new RegExp(
 export const videoInteractionRE = new RegExp(
     "when video motion \\\\> \\(.+\\)\\n|turn video \\[.+\\]\\n|set video transparency to \\(.+\\)\\n|\\(video \\[.+ v\\] on \\[.+ v\\]\\)"
 );
+
+// поиск шапок, срабатывающих по смене громкости, фона, или значению таймера
+export const loudnessTimerBgChangeRE = new RegExp(
+    `when \\[loudness v\\].+\\n|when \\[timer v\\].+\\n|when backdrop switches to \[.+ v\]\n`,
+    "g"
+);

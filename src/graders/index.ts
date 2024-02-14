@@ -14,6 +14,7 @@ import {
     videoInteractionRE,
     waitCondAndBackdropRE,
     waitSecondsRE,
+    loudnessTimerBgChangeRE,
 } from "./searchPatterns";
 import { escapeSB } from "../parser";
 
@@ -216,7 +217,7 @@ function parallelismGrader(project: Project): graderResult {
     }
 
     // даём 3 балла, если одно сообщение запускает больше 1 скрипта
-    let broadcastsFlag: boolean[] = [];
+    let automaticHatsFlag: boolean[] = [];
     project.broadcasts.forEach((b) => {
         try {
             // создаём RE которое содержит название очередного сообщения
@@ -224,13 +225,19 @@ function parallelismGrader(project: Project): graderResult {
             // находим все скрипты стартующие по этому сообщению
             const matches = project.allScripts.matchAll(re);
             // сохраняем в массиве broadcastsFlag значение true, если найдено больше 1 скрипта
-            broadcastsFlag.push(Array.from(matches).length > 1);
+            automaticHatsFlag.push(Array.from(matches).length > 1);
         } catch (e) {}
     });
 
-    // TODO добавить поиск скриптов запускаемых по смене громкости и фона
+    try {
+        // Считаем количество "шапок" срабатывающих по смене громкости
+        const hatsTriggeredByProgramm = project.allScripts.matchAll(
+            loudnessTimerBgChangeRE
+        );
+        automaticHatsFlag.push(Array.from(hatsTriggeredByProgramm).length > 1);
+    } catch (e) {}
 
-    if (broadcastsFlag.includes(true)) {
+    if (automaticHatsFlag.includes(true)) {
         g.grade = gradesEnum.three;
     }
 
