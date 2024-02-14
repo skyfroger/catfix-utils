@@ -228,6 +228,8 @@ function parallelismGrader(project: Project): graderResult {
         } catch (e) {}
     });
 
+    // TODO добавить поиск скриптов запускаемых по смене громкости и фона
+
     if (broadcastsFlag.includes(true)) {
         g.grade = gradesEnum.three;
     }
@@ -283,20 +285,23 @@ function abstractGrader(project: Project): graderResult {
             }
         });
     });
+
+    // 1 балл, если используются собственные блоки
     if (customBlocksUsageCount.includes(true)) {
         g.grade = gradesEnum.one;
-
-        if (isCustomBlockParamsUsed) {
-            g.grade = gradesEnum.two;
-        }
     }
 
-    // 3 балла, если используется клонирование спрайтов
+    // 2 балла, если используется клонирование спрайтов
     // todo сейчас нужно и создать клон И использовать блок "когда я начинаю как клон"
     if (
         cloneSpriteRE.test(project.allScripts) &&
         project.allScripts.includes("when I start as a clone")
     ) {
+        g.grade = gradesEnum.two;
+    }
+
+    // 3 балла, если используются блоки с параметрами
+    if (isCustomBlockParamsUsed) {
         g.grade = gradesEnum.three;
     }
 
