@@ -9,6 +9,7 @@ export declare const roundVarsRE: RegExp;
 export declare const scriptsWithKeyPressEvent: RegExp;
 export declare const cloneSpriteRE: RegExp;
 export declare const waitSecondsRE: RegExp;
+export declare const waitThinkSayRE: RegExp;
 export declare const waitCondAndBackdropRE: RegExp;
 export declare const mouseInteractionRE: RegExp;
 export declare const videoInteractionRE: RegExp;

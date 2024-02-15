@@ -1,4 +1,4 @@
-import { cloneSpriteRE, compConditionsRE, countLoopRE, foreverLoopRE, ifThenElseRE, ifThenRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, untilLoopRE, videoInteractionRE, waitCondAndBackdropRE, waitSecondsRE, loudnessTimerBgChangeRE, } from "./searchPatterns";
+import { cloneSpriteRE, compConditionsRE, countLoopRE, foreverLoopRE, ifThenElseRE, ifThenRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, untilLoopRE, videoInteractionRE, waitCondAndBackdropRE, loudnessTimerBgChangeRE, waitThinkSayRE, } from "./searchPatterns";
 import { escapeSB } from "../parser";
 // список возможных оценок
 export var gradesEnum;
@@ -218,8 +218,8 @@ function syncGrader(project) {
         grade: gradesEnum.zero,
         maxGrade: gradesEnum.three,
     };
-    // даём 1 балл, если есть блок ждать n секунд
-    if (waitSecondsRE.test(project.allScripts)) {
+    // даём 1 балл, если есть блок ждать n секунд, говорить n секунд или думать n секунд
+    if (waitThinkSayRE.test(project.allScripts)) {
         g.grade = gradesEnum.one;
     }
     // проверяем список сообщений: каждое должно быть отправлено и получено хотя бы 1 раз
@@ -244,16 +244,20 @@ function interactivityGrader(project) {
         grade: gradesEnum.zero,
         maxGrade: gradesEnum.three,
     };
-    // 1 балл, если скрипт стартует по щелчку по спрайту
-    if (project.allScripts.includes("when this sprite clicked\n")) {
+    // 1 балл, если скрипт стартует по щелчку по спрайту, или есть блок Мышь нажата?
+    if (project.allScripts.includes("when this sprite clicked\n") ||
+        project.allScripts.includes("<mouse down?>")) {
         g.grade = gradesEnum.one;
     }
     // 2 балла за использование мыши или ввод текста с клавиатуры
     // при этом для ввода должен быть и сам блок ввода и блок с ответом
+    // плюс событие нажатия клавиши или логический блок с проверкой нажата ли клавиша
     const askRE = new RegExp("ask \\[.+\\] and wait\\n");
     const answer = new RegExp("\\(answer\\)");
+    const keyboardInteractionRE = RegExp("when \\[.+ v\\] key pressed::event\\n|<key \\[.+ v\\] pressed\\?>");
     if (mouseInteractionRE.test(project.allScripts) ||
-        (askRE.test(project.allScripts) && answer.test(project.allScripts))) {
+        (askRE.test(project.allScripts) && answer.test(project.allScripts)) ||
+        keyboardInteractionRE.test(project.allScripts)) {
         g.grade = gradesEnum.two;
     }
     // 3 балла за использования микрофона или камеры
