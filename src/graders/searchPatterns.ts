@@ -40,14 +40,19 @@ export const cloneSpriteRE = new RegExp("create clone of \\[(.)+ v\\]\\n");
 // поиск блока ждать n секунд
 export const waitSecondsRE = new RegExp("wait \\(.+\\) seconds\\n");
 
+// блок Ждать секунд, говорить секунд и думать секунд
+export const waitThinkSayRE = new RegExp(
+    "(say|think) \\(.+\\) for \\(.+\\) seconds|wait \\(.+\\) seconds"
+);
+
 // синхронизация через ожидание или смену фона
 export const waitCondAndBackdropRE = new RegExp(
     "wait until <.+>\\n|when backdrop switches to \\[.+\\]\\n"
 );
 
-// все блоки связанные с мышью
+// все блоки связанные с мышью (но без блока <mouse down\\?>)
 export const mouseInteractionRE = new RegExp(
-    "go to \\[mouse-pointer v\\]\\n|glide \\(.+\\) secs to \\[mouse-pointer v\\]\\n|point towards \\[mouse-pointer v\\]\\n|<touching \\[mouse-pointer v\\]\\?>|\\(distance to \\[mouse-pointer v\\]\\)|\\(mouse [xy]\\)|<mouse down\\?>"
+    "go to \\[mouse-pointer v\\]\\n|glide \\(.+\\) secs to \\[mouse-pointer v\\]\\n|point towards \\[mouse-pointer v\\]\\n|<touching \\[mouse-pointer v\\]\\?>|\\(distance to \\[mouse-pointer v\\]\\)|\\(mouse [xy]\\)"
 );
 
 // все блоки для работы с видео
