@@ -231,17 +231,18 @@ function parallelismGrader(project: Project): graderResult {
     });
 
     try {
-        const loudnessChangeRE = new RegExp("when \\[loudness v\\].+\\n");
+        const loudnessChangeRE = new RegExp("when \\[loudness v\\].+\\n", "g");
         // Считаем количество "шапок" срабатывающих по смене громкости
         const loudnessChangeHats =
             project.allScripts.matchAll(loudnessChangeRE);
 
-        const timerChangeRE = new RegExp("when \\[timer v\\].+\\n");
+        const timerChangeRE = new RegExp("when \\[timer v\\].+\\n", "g");
         // Считаем количество "шапок" срабатывающих по смене таймера
         const timerChangeHats = project.allScripts.matchAll(timerChangeRE);
 
         const backdropChangeRE = new RegExp(
-            "when backdrop switches to [.+ v]\n"
+            "when backdrop switches to [.+ v]\n",
+            "g"
         );
         // Считаем количество "шапок" срабатывающих по смене фона
         const backdropChangeHats =
