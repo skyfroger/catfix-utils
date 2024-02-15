@@ -231,11 +231,27 @@ function parallelismGrader(project: Project): graderResult {
     });
 
     try {
+        const loudnessChangeRE = new RegExp("when \\[loudness v\\].+\\n");
         // Считаем количество "шапок" срабатывающих по смене громкости
-        const hatsTriggeredByProgramm = project.allScripts.matchAll(
-            loudnessTimerBgChangeRE
+        const loudnessChangeHats =
+            project.allScripts.matchAll(loudnessChangeRE);
+
+        const timerChangeRE = new RegExp("when \\[timer v\\].+\\n");
+        // Считаем количество "шапок" срабатывающих по смене таймера
+        const timerChangeHats = project.allScripts.matchAll(timerChangeRE);
+
+        const backdropChangeRE = new RegExp(
+            "when backdrop switches to [.+ v]\n"
         );
-        automaticHatsFlag.push(Array.from(hatsTriggeredByProgramm).length > 1);
+        // Считаем количество "шапок" срабатывающих по смене фона
+        const backdropChangeHats =
+            project.allScripts.matchAll(backdropChangeRE);
+
+        automaticHatsFlag.push(
+            Array.from(loudnessChangeHats).length > 1 ||
+                Array.from(timerChangeHats).length > 1 ||
+                Array.from(backdropChangeHats).length > 1
+        );
     } catch (e) {}
 
     if (automaticHatsFlag.includes(true)) {

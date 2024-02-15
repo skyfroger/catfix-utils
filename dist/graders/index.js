@@ -1,4 +1,4 @@
-import { cloneSpriteRE, compConditionsRE, countLoopRE, foreverLoopRE, ifThenElseRE, ifThenRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, untilLoopRE, videoInteractionRE, waitCondAndBackdropRE, loudnessTimerBgChangeRE, waitThinkSayRE, } from "./searchPatterns";
+import { cloneSpriteRE, compConditionsRE, countLoopRE, foreverLoopRE, ifThenElseRE, ifThenRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, untilLoopRE, videoInteractionRE, waitCondAndBackdropRE, waitThinkSayRE, } from "./searchPatterns";
 import { escapeSB } from "../parser";
 // список возможных оценок
 export var gradesEnum;
@@ -150,9 +150,18 @@ function parallelismGrader(project) {
         catch (e) { }
     });
     try {
+        const loudnessChangeRE = new RegExp("when \\[loudness v\\].+\\n");
         // Считаем количество "шапок" срабатывающих по смене громкости
-        const hatsTriggeredByProgramm = project.allScripts.matchAll(loudnessTimerBgChangeRE);
-        automaticHatsFlag.push(Array.from(hatsTriggeredByProgramm).length > 1);
+        const loudnessChangeHats = project.allScripts.matchAll(loudnessChangeRE);
+        const timerChangeRE = new RegExp("when \\[timer v\\].+\\n");
+        // Считаем количество "шапок" срабатывающих по смене таймера
+        const timerChangeHats = project.allScripts.matchAll(timerChangeRE);
+        const backdropChangeRE = new RegExp("when backdrop switches to [.+ v]\n");
+        // Считаем количество "шапок" срабатывающих по смене фона
+        const backdropChangeHats = project.allScripts.matchAll(backdropChangeRE);
+        automaticHatsFlag.push(Array.from(loudnessChangeHats).length > 1 ||
+            Array.from(timerChangeHats).length > 1 ||
+            Array.from(backdropChangeHats).length > 1);
     }
     catch (e) { }
     if (automaticHatsFlag.includes(true)) {
