@@ -50,7 +50,14 @@ export const noComments: tipFunctionInterface = (project, projectJSON) => {
 
     // находим длину самого большого скрипта
     const maxScriptLength = Math.max(
-        ...project.stage.scripts.map((s) => s.split("\n").length),
+        ...project.stage.scripts.map(
+            (s) =>
+                s
+                    .split("\n")
+                    .filter(
+                        (line) => line.trim() != "end" && line.trim() != "else"
+                    ).length
+        ),
         0
     );
 
@@ -70,9 +77,16 @@ export const noComments: tipFunctionInterface = (project, projectJSON) => {
     // потом спрайты
     project.sprites.forEach((sp) => {
         // находим длину самого большого скрипта
-        //console.log(sp.name, sp.scripts);
         const maxScriptLength = Math.max(
-            ...sp.scripts.map((s) => s.split("\n").length),
+            ...sp.scripts.map(
+                (s) =>
+                    s
+                        .split("\n")
+                        .filter(
+                            (line) =>
+                                line.trim() != "end" && line.trim() != "else"
+                        ).length
+            ),
             0
         );
 
