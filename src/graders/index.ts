@@ -276,8 +276,39 @@ function abstractGrader(project: Project): graderResult {
     let customBlocksUsageCount: boolean[] = [];
 
     // использовались ли блоки с параметрами
-    let isCustomBlockParamsUsed = false;
+    let isCustomBlockParamsUsed: boolean[] = [];
 
+    // поиск собственных блоков в скриптах сцены
+    project.stage.customBlocks.forEach((customB) => {
+        const blockSplited = customB.split(" "); // название и параметры в виде массива
+        const blockName = blockSplited[0]; // оставляет имя блока без параметров
+
+        // Чтобы правильно работало регулярное выражение, когда в имени процедуры есть скобки
+        // приходится вызвать эскейп-функцию трижды. Другого решения у меня пока нет
+        const escapedBlockName = escapeSB(
+            escapeSB(escapeSB(blockName, false), false),
+            false
+        );
+
+        const customBRE = new RegExp(`define ${escapedBlockName}.*\\n(.+\\n)+`);
+        if (customBRE.test(project.stage.allScripts)) {
+            // свой блок содержит команды
+            // создаём RE которое содержит название собственного блока
+            const re = new RegExp(`${escapedBlockName}.*::custom\\n`, "g");
+            // находим все вызовы этого блока
+            const matches = project.stage.allScripts.matchAll(re);
+            // сохраняем в массиве broadcastsFlag значение true, если найдено больше 1 скрипта
+            customBlocksUsageCount.push(Array.from(matches).length > 0);
+
+            // %s - текстовый/числовой параметр, %d - логический параметр
+            // TODO: пока не проверяем, используются ли эти параметры внутри собственного блока
+            isCustomBlockParamsUsed.push(
+                blockSplited.includes("%s") || blockSplited.includes("%b")
+            );
+        }
+    });
+
+    // поиск собственных блоков в скриптах спрайтов
     project.sprites.forEach((sp) => {
         // проверяем собственные блоки на валидность (в них есть команды)
         sp.customBlocks.forEach((customB) => {
@@ -305,8 +336,9 @@ function abstractGrader(project: Project): graderResult {
 
                 // %s - текстовый/числовой параметр, %d - логический параметр
                 // TODO: пока не проверяем, используются ли эти параметры внутри собственного блока
-                isCustomBlockParamsUsed =
-                    blockSplited.includes("%s") || blockSplited.includes("%b");
+                isCustomBlockParamsUsed.push(
+                    blockSplited.includes("%s") || blockSplited.includes("%b")
+                );
             }
         });
     });
@@ -326,7 +358,7 @@ function abstractGrader(project: Project): graderResult {
     }
 
     // 3 балла, если используются блоки с параметрами
-    if (isCustomBlockParamsUsed) {
+    if (isCustomBlockParamsUsed.includes(true)) {
         g.grade = gradesEnum.three;
     }
 
