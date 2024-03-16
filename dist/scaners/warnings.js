@@ -35,7 +35,9 @@ export const noComments = (project, projectJSON) => {
     // сначала проверяем сцену...
     // если на сцене есть скрипты, но нет ни одного комментария
     // находим длину самого большого скрипта
-    const maxScriptLength = Math.max(...project.stage.scripts.map((s) => s.split("\n").length), 0);
+    const maxScriptLength = Math.max(...project.stage.scripts.map((s) => s
+        .split("\n")
+        .filter((line) => line.trim() != "end" && line.trim() != "else").length), 0);
     if (maxScriptLength >= LONG_SCRIPT_LENGTH && !project.stage.comments) {
         result.push({
             code: null,
@@ -51,8 +53,9 @@ export const noComments = (project, projectJSON) => {
     // потом спрайты
     project.sprites.forEach((sp) => {
         // находим длину самого большого скрипта
-        //console.log(sp.name, sp.scripts);
-        const maxScriptLength = Math.max(...sp.scripts.map((s) => s.split("\n").length), 0);
+        const maxScriptLength = Math.max(...sp.scripts.map((s) => s
+            .split("\n")
+            .filter((line) => line.trim() != "end" && line.trim() != "else").length), 0);
         if (maxScriptLength >= LONG_SCRIPT_LENGTH && !sp.comments) {
             result.push({
                 code: null,
