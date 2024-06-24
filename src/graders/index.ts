@@ -1,4 +1,5 @@
 import { Project } from "../parsedProject";
+import { ScratchProject } from "../scratch";
 import {
     cloneSpriteRE,
     compConditionsRE,
@@ -48,7 +49,7 @@ export type graderResult = {
     maxGrade: gradesEnum; // максимальная оценка за категорию
 };
 
-function flowGrader(project: Project): graderResult {
+function flowGrader(jsonProject: ScratchProject, project: Project): graderResult {
     /**
      * Поток выполнения: только следование или использование различных циклов.
      */
@@ -446,13 +447,13 @@ function interactivityGrader(project: Project): graderResult {
     return g;
 }
 
-function grader(project: Project): Map<categories, graderResult> {
+function grader(jsonProject: ScratchProject, project: Project): Map<categories, graderResult> {
     /**
      * Функция-агрегатор результатов оценивания по разным критериям
      */
     let res: Map<categories, graderResult> = new Map();
 
-    res.set("flow", flowGrader(project)); // оценка потока выполнения;
+    res.set("flow", flowGrader(jsonProject, project)); // оценка потока выполнения;
     res.set("data", dataRepresentationGrader(project)); // оценка представления данных
     res.set("logic", logicGrader(project)); // оценка использования логических операторов
     res.set("parallel", parallelismGrader(project)); // оценка параллелизма
