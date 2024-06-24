@@ -1,7 +1,7 @@
 import { ScratchProject } from "../scratch";
 import { aliveBlocks, multipleScripts } from "../../mock_projects/aliveBlocks";
 
-import { isBlockAlive, validScriptsCount } from "./utils";
+import { isBlockAlive, validScriptsCount, isOpcodeExists } from "./utils";
 
 const p = aliveBlocks as unknown;
 const jsonProject = p as ScratchProject;
@@ -39,5 +39,11 @@ describe("Функция validScriptsCount - количество скрипто
 
     test("В проекте есть 2 валидных скрипта", () => {
         expect(validScriptsCount(jsonProjectMultiple)).toBe(2);
+    });
+});
+
+describe("Функция isOpcodeExists - существует ли блок с указанным кодом операции", () => {
+    test("Блок существует внутри скрипта спрайта", () => {
+        expect(isOpcodeExists(jsonProject, "event_whenflagclicked")).toBe(true);
     });
 });

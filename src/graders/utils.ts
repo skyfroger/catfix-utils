@@ -1,4 +1,4 @@
-import { Target, ScratchProject } from "../scratch";
+import { Target, ScratchProject, Block } from "../scratch";
 
 import { HAT_BLOCKS } from "../parser";
 
@@ -13,38 +13,38 @@ const HATS = [...HAT_BLOCKS, "procedures_definition"];
  * @returns блок в живом скрипте
  */
 export function isBlockAlive(sp: Target, targetBlockId: string): boolean {
-  const blocks = sp.blocks; // объект с блоками
-  const block = blocks[targetBlockId];
+    const blocks = sp.blocks; // объект с блоками
+    const block = blocks[targetBlockId];
 
-  // if (block.shadow) {
-  //     return true;
-  // }
+    // if (block.shadow) {
+    //     return true;
+    // }
 
-  // блок-шапка без наследников - мёртвый код
-  if (HATS.includes(block.opcode) && block.next === null) {
-    return false;
-  }
+    // блок-шапка без наследников - мёртвый код
+    if (HATS.includes(block.opcode) && block.next === null) {
+        return false;
+    }
 
-  // у блока нет родителей и наследников
-  if (block.next === null && block.parent === null) {
-    return false;
-  }
+    // у блока нет родителей и наследников
+    if (block.next === null && block.parent === null) {
+        return false;
+    }
 
-  // цепочка блоков не приводит к блоку шапке
-  let blockId: string | undefined = targetBlockId;
-  let lastBlockId: string | undefined = targetBlockId;
-  let opCode = "";
-  do {
-    opCode = blocks[blockId ?? ""]?.opcode;
-    lastBlockId = blockId;
-    blockId = blocks[blockId ?? ""]?.parent;
-  } while (blockId);
+    // цепочка блоков не приводит к блоку шапке
+    let blockId: string | undefined = targetBlockId;
+    let lastBlockId: string | undefined = targetBlockId;
+    let opCode = "";
+    do {
+        opCode = blocks[blockId ?? ""]?.opcode;
+        lastBlockId = blockId;
+        blockId = blocks[blockId ?? ""]?.parent;
+    } while (blockId);
 
-  if (!HATS.includes(opCode)) {
-    return false;
-  }
+    if (!HATS.includes(opCode)) {
+        return false;
+    }
 
-  return true;
+    return true;
 }
 
 /**
@@ -53,15 +53,47 @@ export function isBlockAlive(sp: Target, targetBlockId: string): boolean {
  * @returns число скриптов
  */
 export function validScriptsCount(jsonProject: ScratchProject): number {
-  let count = 0;
-  jsonProject.targets.forEach((target) => {
-    const blocks = target.blocks;
-    for (const key in blocks) {
-      if (HATS.includes(blocks[key].opcode) && isBlockAlive(target, key)) {
-        count++;
-      }
-    }
-  });
+    let count = 0;
+    jsonProject.targets.forEach((target) => {
+        const blocks = target.blocks;
+        for (const key in blocks) {
+            if (
+                HATS.includes(blocks[key].opcode) &&
+                isBlockAlive(target, key)
+            ) {
+                count++;
+            }
+        }
+    });
 
-  return count;
+    return count;
+}
+
+/**
+ * Проверяет наличие указанного кода операции
+ * @param jsonProject проект
+ * @param opCode код операции
+ * @returns есть ли блок с указанным кодом операции внутри валидного скрипта
+ */
+export function isOpcodeExists(
+    jsonProject: ScratchProject,
+    opCode: string,
+    validator: (block: Block) => boolean = (b: Block) => true
+): boolean {
+    let flag = false;
+    jsonProject.targets.forEach((target) => {
+        const blocks = target.blocks;
+        for (const key in blocks) {
+            if (
+                blocks[key].opcode === opCode &&
+                validator(blocks[key]) &&
+                isBlockAlive(target, key)
+            ) {
+                flag = true;
+                return true;
+            }
+        }
+    });
+
+    return flag;
 }
