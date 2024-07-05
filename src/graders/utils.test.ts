@@ -1,7 +1,7 @@
-import { ScratchProject } from "../scratch";
+import { Block, ScratchProject } from "../scratch";
 import { aliveBlocks, multipleScripts } from "../../mock_projects/aliveBlocks";
 
-import { isBlockAlive, validScriptsCount, isOpcodeExists } from "./utils";
+import { isBlockAlive, validScriptsCount, opcodeCount } from "./utils";
 
 const p = aliveBlocks as unknown;
 const jsonProject = p as ScratchProject;
@@ -44,6 +44,22 @@ describe("Функция validScriptsCount - количество скрипто
 
 describe("Функция isOpcodeExists - существует ли блок с указанным кодом операции", () => {
     test("Блок существует внутри скрипта спрайта", () => {
-        expect(isOpcodeExists(jsonProject, "event_whenflagclicked")).toBe(true);
+        expect(opcodeCount(jsonProject, "event_whenflagclicked")).toBe(1);
+    });
+
+    test("if с условием и кодом внутри блока", () => {
+        expect(
+            opcodeCount(jsonProject, "control_if", (b: Block) => {
+                // проверяем, есть ли условие и тело условного оператора
+                try {
+                    const inputs = b.inputs as Record<string, any>;
+                    const cond = inputs?.["CONDITION"][1] !== null;
+                    const body = inputs?.["SUBSTACK"][1] !== null;
+                    return cond && body;
+                } catch {
+                    return false;
+                }
+            })
+        ).toBe(1);
     });
 });

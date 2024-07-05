@@ -73,14 +73,15 @@ export function validScriptsCount(jsonProject: ScratchProject): number {
  * Проверяет наличие указанного кода операции
  * @param jsonProject проект
  * @param opCode код операции
+ * @param validator логическая функция для дополнительной валидации блока-кандидата
  * @returns есть ли блок с указанным кодом операции внутри валидного скрипта
  */
-export function isOpcodeExists(
+export function opcodeCount(
     jsonProject: ScratchProject,
     opCode: string,
     validator: (block: Block) => boolean = (b: Block) => true
-): boolean {
-    let flag = false;
+): number {
+    let count = 0;
     jsonProject.targets.forEach((target) => {
         const blocks = target.blocks;
         for (const key in blocks) {
@@ -89,11 +90,10 @@ export function isOpcodeExists(
                 validator(blocks[key]) &&
                 isBlockAlive(target, key)
             ) {
-                flag = true;
-                return true;
+                count++;
             }
         }
     });
 
-    return flag;
+    return count;
 }
