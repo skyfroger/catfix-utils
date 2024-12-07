@@ -1,5 +1,5 @@
 import { Project } from "../parsedProject";
-import { ScratchProject } from "../scratch";
+import { Block, ScratchProject } from "../scratch";
 import {
     cloneSpriteRE,
     compConditionsRE,
@@ -18,6 +18,7 @@ import {
     loudnessTimerBgChangeRE,
     waitThinkSayRE,
 } from "./searchPatterns";
+import { validScriptsCount, opcodeCount } from "./utils";
 import { escapeSB } from "../parser";
 
 /*
@@ -49,7 +50,10 @@ export type graderResult = {
     maxGrade: gradesEnum; // максимальная оценка за категорию
 };
 
-function flowGrader(jsonProject: ScratchProject, project: Project): graderResult {
+function flowGrader(
+    jsonProject: ScratchProject,
+    project: Project
+): graderResult {
     /**
      * Поток выполнения: только следование или использование различных циклов.
      */
@@ -58,29 +62,50 @@ function flowGrader(jsonProject: ScratchProject, project: Project): graderResult
         maxGrade: gradesEnum.three,
     };
 
-    // считаем количество скриптов в спрайтах проекта
-    const scriptsCount = project.sprites.reduce(
-        (previousValue, currentSprite) => {
-            return previousValue + currentSprite.scripts.length;
-        },
-        0
-    );
-
-    // даём 1 балл, если есть хотя бы 1 скрипт на сцене или в спрайте
-    if (project.stage.scripts.length > 0 || scriptsCount > 0) {
+    if (validScriptsCount(jsonProject) > 0) {
         g.grade = gradesEnum.one;
     }
 
+    const foreverLoopCount = opcodeCount(
+        jsonProject,
+        "control_forever",
+        (b: Block) => {
+            const inputs = b.inputs;
+            const body = inputs?.SUBSTACK?.[1] !== null;
+            return body;
+        }
+    );
+
+    const countLoopNumber = opcodeCount(
+        jsonProject,
+        "control_repeat",
+        (b: Block) => {
+            const inputs = b.inputs;
+            const body = inputs?.SUBSTACK?.[1] !== null;
+            return body;
+        }
+    );
+
     // даём 2 балла, если есть бесконечный цикл или счётный цикл
-    if (
-        foreverLoopRE.test(project.allScripts) ||
-        countLoopRE.test(project.allScripts)
-    ) {
+    if (foreverLoopCount > 0 || countLoopNumber > 0) {
         g.grade = gradesEnum.two;
     }
 
+    // ищем цикл с условием в котором есть условие и внутрение блоки
+    const repeatUntilLoopNumber = opcodeCount(
+        jsonProject,
+        "control_repeat_until",
+        (b: Block) => {
+            const inputs = b.inputs;
+            const hasStackAndCondition =
+                inputs?.SUBSTACK?.[1] !== null &&
+                inputs?.CONDITION?.[1] !== null;
+            return hasStackAndCondition;
+        }
+    );
+
     // даём 3 балла, если есть цикл с предусловием
-    if (untilLoopRE.test(project.allScripts)) {
+    if (repeatUntilLoopNumber > 0) {
         g.grade = gradesEnum.three;
     }
 
@@ -447,7 +472,10 @@ function interactivityGrader(project: Project): graderResult {
     return g;
 }
 
-function grader(jsonProject: ScratchProject, project: Project): Map<categories, graderResult> {
+function grader(
+    jsonProject: ScratchProject,
+    project: Project
+): Map<categories, graderResult> {
     /**
      * Функция-агрегатор результатов оценивания по разным критериям
      */

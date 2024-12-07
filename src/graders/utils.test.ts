@@ -52,9 +52,9 @@ describe("Функция isOpcodeExists - существует ли блок с 
             opcodeCount(jsonProject, "control_if", (b: Block) => {
                 // проверяем, есть ли условие и тело условного оператора
                 try {
-                    const inputs = b.inputs as Record<string, any>;
-                    const cond = inputs?.["CONDITION"][1] !== null;
-                    const body = inputs?.["SUBSTACK"][1] !== null;
+                    const inputs = b.inputs;
+                    const cond = inputs?.INPUTS?.[1] !== null;
+                    const body = inputs?.SUBSTACK?.[1] !== null;
                     return cond && body;
                 } catch {
                     return false;
