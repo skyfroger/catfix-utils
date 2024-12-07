@@ -1,4 +1,5 @@
-import { cloneSpriteRE, compConditionsRE, countLoopRE, foreverLoopRE, ifThenElseRE, ifThenRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, untilLoopRE, videoInteractionRE, waitCondAndBackdropRE, waitThinkSayRE, } from "./searchPatterns";
+import { cloneSpriteRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, videoInteractionRE, waitCondAndBackdropRE, waitThinkSayRE, } from "./searchPatterns";
+import { validScriptsCount, opcodeCount } from "./utils";
 import { escapeSB } from "../parser";
 // список возможных оценок
 export var gradesEnum;
@@ -8,7 +9,7 @@ export var gradesEnum;
     gradesEnum[gradesEnum["two"] = 2] = "two";
     gradesEnum[gradesEnum["three"] = 3] = "three";
 })(gradesEnum || (gradesEnum = {}));
-function flowGrader(project) {
+function flowGrader(jsonProject, project) {
     /**
      * Поток выполнения: только следование или использование различных циклов.
      */
@@ -16,21 +17,35 @@ function flowGrader(project) {
         grade: gradesEnum.zero,
         maxGrade: gradesEnum.three,
     };
-    // считаем количество скриптов в спрайтах проекта
-    const scriptsCount = project.sprites.reduce((previousValue, currentSprite) => {
-        return previousValue + currentSprite.scripts.length;
-    }, 0);
-    // даём 1 балл, если есть хотя бы 1 скрипт на сцене или в спрайте
-    if (project.stage.scripts.length > 0 || scriptsCount > 0) {
+    if (validScriptsCount(jsonProject) > 0) {
         g.grade = gradesEnum.one;
     }
+    const foreverLoopCount = opcodeCount(jsonProject, "control_forever", (b) => {
+        var _a;
+        const inputs = b.inputs;
+        const body = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null;
+        return body;
+    });
+    const countLoopNumber = opcodeCount(jsonProject, "control_repeat", (b) => {
+        var _a;
+        const inputs = b.inputs;
+        const body = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null;
+        return body;
+    });
     // даём 2 балла, если есть бесконечный цикл или счётный цикл
-    if (foreverLoopRE.test(project.allScripts) ||
-        countLoopRE.test(project.allScripts)) {
+    if (foreverLoopCount > 0 || countLoopNumber > 0) {
         g.grade = gradesEnum.two;
     }
+    // ищем цикл с условием в котором есть условие и внутрение блоки
+    const repeatUntilLoopNumber = opcodeCount(jsonProject, "control_repeat_until", (b) => {
+        var _a, _b;
+        const inputs = b.inputs;
+        const hasStackAndCondition = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null &&
+            ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.CONDITION) === null || _b === void 0 ? void 0 : _b[1]) !== null;
+        return hasStackAndCondition;
+    });
     // даём 3 балла, если есть цикл с предусловием
-    if (untilLoopRE.test(project.allScripts)) {
+    if (repeatUntilLoopNumber > 0) {
         g.grade = gradesEnum.three;
     }
     return g;
@@ -72,7 +87,7 @@ function dataRepresentationGrader(project) {
     }
     return g;
 }
-function logicGrader(project) {
+function logicGrader(jsonProject, project) {
     /**
      * Логика: условные операторы и составные условия
      */
@@ -80,17 +95,58 @@ function logicGrader(project) {
         grade: gradesEnum.zero,
         maxGrade: gradesEnum.three,
     };
+    // неполное ветвление с условием и блоками внутри
+    const simpleIfThen = opcodeCount(jsonProject, "control_if", (b) => {
+        var _a, _b;
+        const inputs = b.inputs;
+        const hasStackAndCondition = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null && ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.CONDITION) === null || _b === void 0 ? void 0 : _b[1]) !== null;
+        return hasStackAndCondition;
+    });
     // даём 1 балл, если есть оператор если ... то
-    if (ifThenRE.test(project.allScripts)) {
+    if (simpleIfThen > 0) {
         g.grade = gradesEnum.one;
     }
+    /*
+    Поиск полной записи ветвления.
+    Важно! Сейчас достаточно хотя бы одного подстека.
+    Формально, должно использоваться обе ветви или хотя бы ветвь иначе
+    */
+    const fullIfThenElse = opcodeCount(jsonProject, "control_if_else", (b) => {
+        var _a, _b, _c;
+        const inputs = b.inputs;
+        const hasStackAndCondition = (((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null ||
+            ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK2) === null || _b === void 0 ? void 0 : _b[1]) !== null) &&
+            ((_c = inputs === null || inputs === void 0 ? void 0 : inputs.CONDITION) === null || _c === void 0 ? void 0 : _c[1]) !== null;
+        return hasStackAndCondition;
+    });
     // даём 2 балла, если есть оператор если ... то ... иначе
-    if (ifThenElseRE.test(project.allScripts)) {
+    if (fullIfThenElse > 0) {
         g.grade = gradesEnum.two;
     }
+    // есть логический оператор НЕ
+    const logicNot = opcodeCount(jsonProject, "operator_not", (b) => {
+        var _a;
+        const inputs = b.inputs;
+        const hasOperand = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND) === null || _a === void 0 ? void 0 : _a[1]) !== null;
+        return hasOperand;
+    });
+    // есть логический оператор И
+    const logicAnd = opcodeCount(jsonProject, "operator_and", (b) => {
+        var _a, _b;
+        const inputs = b.inputs;
+        const hasOperands = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND1) === null || _a === void 0 ? void 0 : _a[1]) !== null && ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND2) === null || _b === void 0 ? void 0 : _b[1]) !== null;
+        return hasOperands;
+    });
+    // есть логический оператор ИЛИ
+    const logicOr = opcodeCount(jsonProject, "operator_or", (b) => {
+        var _a, _b;
+        const inputs = b.inputs;
+        const hasOperands = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND1) === null || _a === void 0 ? void 0 : _a[1]) !== null && ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND2) === null || _b === void 0 ? void 0 : _b[1]) !== null;
+        return hasOperands;
+    });
     // даём 3 балла за составные условия
     // todo нужно проверять не пустые ли блоки, в которых встречаются составные условия
-    if (compConditionsRE.test(project.allScripts)) {
+    if (logicNot + logicAnd + logicOr > 0) {
         g.grade = gradesEnum.three;
     }
     return g;
@@ -300,14 +356,14 @@ function interactivityGrader(project) {
     }
     return g;
 }
-function grader(project) {
+function grader(jsonProject, project) {
     /**
      * Функция-агрегатор результатов оценивания по разным критериям
      */
     let res = new Map();
-    res.set("flow", flowGrader(project)); // оценка потока выполнения;
+    res.set("flow", flowGrader(jsonProject, project)); // оценка потока выполнения;
     res.set("data", dataRepresentationGrader(project)); // оценка представления данных
-    res.set("logic", logicGrader(project)); // оценка использования логических операторов
+    res.set("logic", logicGrader(jsonProject, project)); // оценка использования логических операторов
     res.set("parallel", parallelismGrader(project)); // оценка параллелизма
     res.set("abstract", abstractGrader(project)); // оценка абстрактности
     res.set("sync", syncGrader(project)); // оценка синхронизации спрайтов
