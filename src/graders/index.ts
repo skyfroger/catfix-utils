@@ -81,7 +81,8 @@ function flowGrader(
         "control_repeat",
         (b: Block) => {
             const inputs = b.inputs;
-            const body = inputs?.SUBSTACK?.[1] !== null;
+            const body = "SUBSTACK" in inputs && inputs?.SUBSTACK?.[1] !== null;
+            console.log(body);
             return body;
         }
     );
@@ -98,7 +99,9 @@ function flowGrader(
         (b: Block) => {
             const inputs = b.inputs;
             const hasStackAndCondition =
+                "SUBSTACK" in inputs &&
                 inputs?.SUBSTACK?.[1] !== null &&
+                "CONDITION" in inputs &&
                 inputs?.CONDITION?.[1] !== null;
             return hasStackAndCondition;
         }
@@ -181,7 +184,10 @@ function logicGrader(
     const simpleIfThen = opcodeCount(jsonProject, "control_if", (b: Block) => {
         const inputs = b.inputs;
         const hasStackAndCondition =
-            inputs?.SUBSTACK?.[1] !== null && inputs?.CONDITION?.[1] !== null;
+            "SUBSTACK" in inputs &&
+            inputs?.SUBSTACK?.[1] !== null &&
+            "CONDITION" in inputs &&
+            inputs?.CONDITION?.[1] !== null;
         return hasStackAndCondition;
     });
 
@@ -201,8 +207,10 @@ function logicGrader(
         (b: Block) => {
             const inputs = b.inputs;
             const hasStackAndCondition =
-                (inputs?.SUBSTACK?.[1] !== null ||
-                    inputs?.SUBSTACK2?.[1] !== null) &&
+                (("SUBSTACK" in inputs && inputs?.SUBSTACK?.[1] !== null) ||
+                    ("SUBSTACK2" in inputs &&
+                        inputs?.SUBSTACK2?.[1] !== null)) &&
+                "CONDITION" in inputs &&
                 inputs?.CONDITION?.[1] !== null;
             return hasStackAndCondition;
         }
@@ -216,7 +224,7 @@ function logicGrader(
     // есть логический оператор НЕ
     const logicNot = opcodeCount(jsonProject, "operator_not", (b: Block) => {
         const inputs = b.inputs;
-        const hasOperand = inputs?.OPERAND?.[1] !== null;
+        const hasOperand = "OPERAND" in inputs && inputs?.OPERAND?.[1] !== null;
         return hasOperand;
     });
 
@@ -224,7 +232,10 @@ function logicGrader(
     const logicAnd = opcodeCount(jsonProject, "operator_and", (b: Block) => {
         const inputs = b.inputs;
         const hasOperands =
-            inputs?.OPERAND1?.[1] !== null && inputs?.OPERAND2?.[1] !== null;
+            "OPERAND1" in inputs &&
+            "OPERAND2" in inputs &&
+            inputs?.OPERAND1?.[1] !== null &&
+            inputs?.OPERAND2?.[1] !== null;
         return hasOperands;
     });
 
@@ -232,7 +243,10 @@ function logicGrader(
     const logicOr = opcodeCount(jsonProject, "operator_or", (b: Block) => {
         const inputs = b.inputs;
         const hasOperands =
-            inputs?.OPERAND1?.[1] !== null && inputs?.OPERAND2?.[1] !== null;
+            "OPERAND1" in inputs &&
+            "OPERAND2" in inputs &&
+            inputs?.OPERAND1?.[1] !== null &&
+            inputs?.OPERAND2?.[1] !== null;
         return hasOperands;
     });
 

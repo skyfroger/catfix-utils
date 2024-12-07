@@ -29,7 +29,8 @@ function flowGrader(jsonProject, project) {
     const countLoopNumber = opcodeCount(jsonProject, "control_repeat", (b) => {
         var _a;
         const inputs = b.inputs;
-        const body = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null;
+        const body = "SUBSTACK" in inputs && ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null;
+        console.log(body);
         return body;
     });
     // даём 2 балла, если есть бесконечный цикл или счётный цикл
@@ -40,7 +41,9 @@ function flowGrader(jsonProject, project) {
     const repeatUntilLoopNumber = opcodeCount(jsonProject, "control_repeat_until", (b) => {
         var _a, _b;
         const inputs = b.inputs;
-        const hasStackAndCondition = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null &&
+        const hasStackAndCondition = "SUBSTACK" in inputs &&
+            ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null &&
+            "CONDITION" in inputs &&
             ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.CONDITION) === null || _b === void 0 ? void 0 : _b[1]) !== null;
         return hasStackAndCondition;
     });
@@ -99,7 +102,10 @@ function logicGrader(jsonProject, project) {
     const simpleIfThen = opcodeCount(jsonProject, "control_if", (b) => {
         var _a, _b;
         const inputs = b.inputs;
-        const hasStackAndCondition = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null && ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.CONDITION) === null || _b === void 0 ? void 0 : _b[1]) !== null;
+        const hasStackAndCondition = "SUBSTACK" in inputs &&
+            ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null &&
+            "CONDITION" in inputs &&
+            ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.CONDITION) === null || _b === void 0 ? void 0 : _b[1]) !== null;
         return hasStackAndCondition;
     });
     // даём 1 балл, если есть оператор если ... то
@@ -114,8 +120,10 @@ function logicGrader(jsonProject, project) {
     const fullIfThenElse = opcodeCount(jsonProject, "control_if_else", (b) => {
         var _a, _b, _c;
         const inputs = b.inputs;
-        const hasStackAndCondition = (((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null ||
-            ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK2) === null || _b === void 0 ? void 0 : _b[1]) !== null) &&
+        const hasStackAndCondition = (("SUBSTACK" in inputs && ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null) ||
+            ("SUBSTACK2" in inputs &&
+                ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK2) === null || _b === void 0 ? void 0 : _b[1]) !== null)) &&
+            "CONDITION" in inputs &&
             ((_c = inputs === null || inputs === void 0 ? void 0 : inputs.CONDITION) === null || _c === void 0 ? void 0 : _c[1]) !== null;
         return hasStackAndCondition;
     });
@@ -127,21 +135,27 @@ function logicGrader(jsonProject, project) {
     const logicNot = opcodeCount(jsonProject, "operator_not", (b) => {
         var _a;
         const inputs = b.inputs;
-        const hasOperand = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND) === null || _a === void 0 ? void 0 : _a[1]) !== null;
+        const hasOperand = "OPERAND" in inputs && ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND) === null || _a === void 0 ? void 0 : _a[1]) !== null;
         return hasOperand;
     });
     // есть логический оператор И
     const logicAnd = opcodeCount(jsonProject, "operator_and", (b) => {
         var _a, _b;
         const inputs = b.inputs;
-        const hasOperands = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND1) === null || _a === void 0 ? void 0 : _a[1]) !== null && ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND2) === null || _b === void 0 ? void 0 : _b[1]) !== null;
+        const hasOperands = "OPERAND1" in inputs &&
+            "OPERAND2" in inputs &&
+            ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND1) === null || _a === void 0 ? void 0 : _a[1]) !== null &&
+            ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND2) === null || _b === void 0 ? void 0 : _b[1]) !== null;
         return hasOperands;
     });
     // есть логический оператор ИЛИ
     const logicOr = opcodeCount(jsonProject, "operator_or", (b) => {
         var _a, _b;
         const inputs = b.inputs;
-        const hasOperands = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND1) === null || _a === void 0 ? void 0 : _a[1]) !== null && ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND2) === null || _b === void 0 ? void 0 : _b[1]) !== null;
+        const hasOperands = "OPERAND1" in inputs &&
+            "OPERAND2" in inputs &&
+            ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND1) === null || _a === void 0 ? void 0 : _a[1]) !== null &&
+            ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.OPERAND2) === null || _b === void 0 ? void 0 : _b[1]) !== null;
         return hasOperands;
     });
     // даём 3 балла за составные условия

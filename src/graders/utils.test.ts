@@ -1,7 +1,10 @@
 import { Block, ScratchProject } from "../scratch";
 import { aliveBlocks, multipleScripts } from "../../mock_projects/aliveBlocks";
+import { emptyLoop } from "../../mock_projects/loops";
 
 import { isBlockAlive, validScriptsCount, opcodeCount } from "./utils";
+import parseProject from "../parser";
+import grader from "../graders/index";
 
 const p = aliveBlocks as unknown;
 const jsonProject = p as ScratchProject;
@@ -9,6 +12,9 @@ const target = jsonProject.targets[1];
 
 const j = multipleScripts as unknown;
 const jsonProjectMultiple = j as ScratchProject;
+
+const l = emptyLoop as unknown;
+const jsonEmptyLoop = l as ScratchProject;
 
 describe("Функция isBlockAlive - блок в живом скрипте", () => {
     test("Скрипт существует, начинаем с шапки", () => {
@@ -39,6 +45,14 @@ describe("Функция validScriptsCount - количество скрипто
 
     test("В проекте есть 2 валидных скрипта", () => {
         expect(validScriptsCount(jsonProjectMultiple)).toBe(2);
+    });
+});
+
+describe("Циклы", () => {
+    test("Пустой цикл без тела", () => {
+        const parsed = parseProject(jsonEmptyLoop);
+        const g = grader(jsonEmptyLoop, parsed);
+        console.log(g);
     });
 });
 
