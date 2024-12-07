@@ -23,14 +23,14 @@ function flowGrader(jsonProject, project) {
     const foreverLoopCount = opcodeCount(jsonProject, "control_forever", (b) => {
         var _a;
         const inputs = b.inputs;
-        const body = ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null;
+        const body = "SUBSTACK" in inputs && ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null;
         return body;
     });
     const countLoopNumber = opcodeCount(jsonProject, "control_repeat", (b) => {
         var _a;
         const inputs = b.inputs;
         const body = "SUBSTACK" in inputs && ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null;
-        console.log(body);
+        console.log("repeat", inputs, body);
         return body;
     });
     // даём 2 балла, если есть бесконечный цикл или счётный цикл
@@ -45,6 +45,7 @@ function flowGrader(jsonProject, project) {
             ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null &&
             "CONDITION" in inputs &&
             ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.CONDITION) === null || _b === void 0 ? void 0 : _b[1]) !== null;
+        console.log("repeat_until", inputs, hasStackAndCondition);
         return hasStackAndCondition;
     });
     // даём 3 балла, если есть цикл с предусловием

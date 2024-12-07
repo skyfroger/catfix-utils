@@ -71,7 +71,7 @@ function flowGrader(
         "control_forever",
         (b: Block) => {
             const inputs = b.inputs;
-            const body = inputs?.SUBSTACK?.[1] !== null;
+            const body = "SUBSTACK" in inputs && inputs?.SUBSTACK?.[1] !== null;
             return body;
         }
     );
@@ -82,7 +82,7 @@ function flowGrader(
         (b: Block) => {
             const inputs = b.inputs;
             const body = "SUBSTACK" in inputs && inputs?.SUBSTACK?.[1] !== null;
-            console.log(body);
+            console.log("repeat", inputs, body);
             return body;
         }
     );
@@ -103,6 +103,7 @@ function flowGrader(
                 inputs?.SUBSTACK?.[1] !== null &&
                 "CONDITION" in inputs &&
                 inputs?.CONDITION?.[1] !== null;
+            console.log("repeat_until", inputs, hasStackAndCondition);
             return hasStackAndCondition;
         }
     );
