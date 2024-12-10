@@ -5,7 +5,7 @@
 import { Project, Sprite } from "../parsedProject";
 import { Block, ScratchProject, Target } from "../scratch";
 
-import toScratchblocks from "parse-sb3-blocks/dist/parse-sb3-blocks.module";
+import { toScratchblocks } from "parse-sb3-blocks/dist/parse-sb3-blocks.module";
 
 // список кодов для блоков-тригеров
 export const HAT_BLOCKS = [
