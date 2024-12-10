@@ -170,7 +170,10 @@ function dataRepresentationGrader(project: Project): graderResult {
     return g;
 }
 
-function logicGrader(project: Project): graderResult {
+function logicGrader(
+    jsonProject: ScratchProject,
+    project: Project
+): graderResult {
     /**
      * Логика: условные операторы и составные условия
      */
@@ -179,19 +182,79 @@ function logicGrader(project: Project): graderResult {
         maxGrade: gradesEnum.three,
     };
 
+    // неполное ветвление с условием и блоками внутри
+    const simpleIfThen = opcodeCount(jsonProject, "control_if", (b: Block) => {
+        const inputs = b.inputs;
+        const hasStackAndCondition =
+            "SUBSTACK" in inputs &&
+            inputs?.SUBSTACK?.[1] !== null &&
+            "CONDITION" in inputs &&
+            inputs?.CONDITION?.[1] !== null;
+        return hasStackAndCondition;
+    });
+
     // даём 1 балл, если есть оператор если ... то
-    if (ifThenRE.test(project.allScripts)) {
+    if (simpleIfThen > 0) {
         g.grade = gradesEnum.one;
     }
 
+    /*
+    Поиск полной записи ветвления.
+    Важно! Сейчас достаточно хотя бы одного подстека.
+    Формально, должно использоваться обе ветви или хотя бы ветвь иначе
+    */
+    const fullIfThenElse = opcodeCount(
+        jsonProject,
+        "control_if_else",
+        (b: Block) => {
+            const inputs = b.inputs;
+            const hasStackAndCondition =
+                (("SUBSTACK" in inputs && inputs?.SUBSTACK?.[1] !== null) ||
+                    ("SUBSTACK2" in inputs &&
+                        inputs?.SUBSTACK2?.[1] !== null)) &&
+                "CONDITION" in inputs &&
+                inputs?.CONDITION?.[1] !== null;
+            return hasStackAndCondition;
+        }
+    );
+
     // даём 2 балла, если есть оператор если ... то ... иначе
-    if (ifThenElseRE.test(project.allScripts)) {
+    if (fullIfThenElse > 0) {
         g.grade = gradesEnum.two;
     }
 
+    // есть логический оператор НЕ
+    const logicNot = opcodeCount(jsonProject, "operator_not", (b: Block) => {
+        const inputs = b.inputs;
+        const hasOperand = "OPERAND" in inputs && inputs?.OPERAND?.[1] !== null;
+        return hasOperand;
+    });
+
+    // есть логический оператор И
+    const logicAnd = opcodeCount(jsonProject, "operator_and", (b: Block) => {
+        const inputs = b.inputs;
+        const hasOperands =
+            "OPERAND1" in inputs &&
+            "OPERAND2" in inputs &&
+            inputs?.OPERAND1?.[1] !== null &&
+            inputs?.OPERAND2?.[1] !== null;
+        return hasOperands;
+    });
+
+    // есть логический оператор ИЛИ
+    const logicOr = opcodeCount(jsonProject, "operator_or", (b: Block) => {
+        const inputs = b.inputs;
+        const hasOperands =
+            "OPERAND1" in inputs &&
+            "OPERAND2" in inputs &&
+            inputs?.OPERAND1?.[1] !== null &&
+            inputs?.OPERAND2?.[1] !== null;
+        return hasOperands;
+    });
+
     // даём 3 балла за составные условия
     // todo нужно проверять не пустые ли блоки, в которых встречаются составные условия
-    if (compConditionsRE.test(project.allScripts)) {
+    if (logicNot + logicAnd + logicOr > 0) {
         g.grade = gradesEnum.three;
     }
 
@@ -488,7 +551,7 @@ function grader(
 
     res.set("flow", flowGrader(jsonProject, project)); // оценка потока выполнения;
     res.set("data", dataRepresentationGrader(project)); // оценка представления данных
-    res.set("logic", logicGrader(project)); // оценка использования логических операторов
+    res.set("logic", logicGrader(jsonProject, project)); // оценка использования логических операторов
     res.set("parallel", parallelismGrader(project)); // оценка параллелизма
     res.set("abstract", abstractGrader(project)); // оценка абстрактности
     res.set("sync", syncGrader(project)); // оценка синхронизации спрайтов
