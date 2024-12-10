@@ -300,7 +300,7 @@ function interactivityGrader(project) {
     }
     return g;
 }
-function grader(project) {
+function grader(jsonProject, project) {
     /**
      * Функция-агрегатор результатов оценивания по разным критериям
      */

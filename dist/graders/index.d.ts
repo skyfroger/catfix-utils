@@ -1,4 +1,5 @@
 import { Project } from "../parsedProject";
+import { ScratchProject } from "../scratch";
 export type categories = "flow" | "data" | "logic" | "parallel" | "abstract" | "sync" | "interactivity";
 export declare enum gradesEnum {
     zero = 0,
@@ -10,7 +11,7 @@ export type graderResult = {
     grade: gradesEnum;
     maxGrade: gradesEnum;
 };
-declare function grader(project: Project): Map<categories, graderResult>;
+declare function grader(jsonProject: ScratchProject, project: Project): Map<categories, graderResult>;
 /**
  * Вычисляем суммарную оценку
  * @param grades оценки проекта

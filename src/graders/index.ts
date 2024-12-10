@@ -448,7 +448,10 @@ function interactivityGrader(project: Project): graderResult {
     return g;
 }
 
-function grader(project: Project): Map<categories, graderResult> {
+function grader(
+    jsonProject: ScratchProject,
+    project: Project
+): Map<categories, graderResult> {
     /**
      * Функция-агрегатор результатов оценивания по разным критериям
      */
