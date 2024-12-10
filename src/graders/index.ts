@@ -1,4 +1,5 @@
 import { Project } from "../parsedProject";
+import { Block, ScratchProject } from "../scratch";
 import {
     cloneSpriteRE,
     compConditionsRE,
@@ -17,6 +18,7 @@ import {
     loudnessTimerBgChangeRE,
     waitThinkSayRE,
 } from "./searchPatterns";
+import { validScriptsCount, opcodeCount } from "./utils";
 import { escapeSB } from "../parser";
 
 /*

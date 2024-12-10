@@ -31,7 +31,15 @@ export type Block = {
     opcode: string;
     next?: string;
     parent?: string;
-    inputs: JSONValue;
+    inputs: {
+        INPUTS?: Array<string | number | null>;
+        SUBSTACK?: Array<string | number | null>;
+        SUBSTACK2?: Array<string | number | null>;
+        CONDITION?: Array<string | number | null>;
+        OPERAND?: Array<string | number | null>;
+        OPERAND1?: Array<string | number | null>;
+        OPERAND2?: Array<string | number | null>;
+    };
     fields: JSONValue;
     shadow: boolean;
     topLevel: boolean;
