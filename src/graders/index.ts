@@ -50,38 +50,67 @@ export type graderResult = {
     maxGrade: gradesEnum; // максимальная оценка за категорию
 };
 
-function flowGrader(project: Project): graderResult {
+function flowGrader(
+    jsonProject: ScratchProject,
+    project: Project
+): graderResult {
     /**
      * Поток выполнения: только следование или использование различных циклов.
      */
+
     let g: graderResult = {
         grade: gradesEnum.zero,
         maxGrade: gradesEnum.three,
     };
 
-    // считаем количество скриптов в спрайтах проекта
-    const scriptsCount = project.sprites.reduce(
-        (previousValue, currentSprite) => {
-            return previousValue + currentSprite.scripts.length;
-        },
-        0
-    );
-
-    // даём 1 балл, если есть хотя бы 1 скрипт на сцене или в спрайте
-    if (project.stage.scripts.length > 0 || scriptsCount > 0) {
+    if (validScriptsCount(jsonProject) > 0) {
         g.grade = gradesEnum.one;
     }
 
+    const foreverLoopCount = opcodeCount(
+        jsonProject,
+        "control_forever",
+        (b: Block) => {
+            const inputs = b.inputs;
+            const body = "SUBSTACK" in inputs && inputs?.SUBSTACK?.[1] !== null;
+            return body;
+        }
+    );
+
+    const countLoopNumber = opcodeCount(
+        jsonProject,
+        "control_repeat",
+        (b: Block) => {
+            const inputs = b.inputs;
+            const body = "SUBSTACK" in inputs && inputs?.SUBSTACK?.[1] !== null;
+            console.log("repeat", inputs, body);
+            return body;
+        }
+    );
+
     // даём 2 балла, если есть бесконечный цикл или счётный цикл
-    if (
-        foreverLoopRE.test(project.allScripts) ||
-        countLoopRE.test(project.allScripts)
-    ) {
+    if (foreverLoopCount > 0 || countLoopNumber > 0) {
         g.grade = gradesEnum.two;
     }
 
+    // ищем цикл с условием в котором есть условие и внутрение блоки
+    const repeatUntilLoopNumber = opcodeCount(
+        jsonProject,
+        "control_repeat_until",
+        (b: Block) => {
+            const inputs = b.inputs;
+            const hasStackAndCondition =
+                "SUBSTACK" in inputs &&
+                inputs?.SUBSTACK?.[1] !== null &&
+                "CONDITION" in inputs &&
+                inputs?.CONDITION?.[1] !== null;
+            console.log("repeat_until", inputs, hasStackAndCondition);
+            return hasStackAndCondition;
+        }
+    );
+
     // даём 3 балла, если есть цикл с предусловием
-    if (untilLoopRE.test(project.allScripts)) {
+    if (repeatUntilLoopNumber > 0) {
         g.grade = gradesEnum.three;
     }
 
@@ -457,7 +486,7 @@ function grader(
      */
     let res: Map<categories, graderResult> = new Map();
 
-    res.set("flow", flowGrader(project)); // оценка потока выполнения;
+    res.set("flow", flowGrader(jsonProject, project)); // оценка потока выполнения;
     res.set("data", dataRepresentationGrader(project)); // оценка представления данных
     res.set("logic", logicGrader(project)); // оценка использования логических операторов
     res.set("parallel", parallelismGrader(project)); // оценка параллелизма

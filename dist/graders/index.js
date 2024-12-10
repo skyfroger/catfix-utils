@@ -1,4 +1,5 @@
-import { cloneSpriteRE, compConditionsRE, countLoopRE, foreverLoopRE, ifThenElseRE, ifThenRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, untilLoopRE, videoInteractionRE, waitCondAndBackdropRE, waitThinkSayRE, } from "./searchPatterns";
+import { cloneSpriteRE, compConditionsRE, ifThenElseRE, ifThenRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, videoInteractionRE, waitCondAndBackdropRE, waitThinkSayRE, } from "./searchPatterns";
+import { validScriptsCount, opcodeCount } from "./utils";
 import { escapeSB } from "../parser";
 // список возможных оценок
 export var gradesEnum;
@@ -8,7 +9,7 @@ export var gradesEnum;
     gradesEnum[gradesEnum["two"] = 2] = "two";
     gradesEnum[gradesEnum["three"] = 3] = "three";
 })(gradesEnum || (gradesEnum = {}));
-function flowGrader(project) {
+function flowGrader(jsonProject, project) {
     /**
      * Поток выполнения: только следование или использование различных циклов.
      */
@@ -16,21 +17,39 @@ function flowGrader(project) {
         grade: gradesEnum.zero,
         maxGrade: gradesEnum.three,
     };
-    // считаем количество скриптов в спрайтах проекта
-    const scriptsCount = project.sprites.reduce((previousValue, currentSprite) => {
-        return previousValue + currentSprite.scripts.length;
-    }, 0);
-    // даём 1 балл, если есть хотя бы 1 скрипт на сцене или в спрайте
-    if (project.stage.scripts.length > 0 || scriptsCount > 0) {
+    if (validScriptsCount(jsonProject) > 0) {
         g.grade = gradesEnum.one;
     }
+    const foreverLoopCount = opcodeCount(jsonProject, "control_forever", (b) => {
+        var _a;
+        const inputs = b.inputs;
+        const body = "SUBSTACK" in inputs && ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null;
+        return body;
+    });
+    const countLoopNumber = opcodeCount(jsonProject, "control_repeat", (b) => {
+        var _a;
+        const inputs = b.inputs;
+        const body = "SUBSTACK" in inputs && ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null;
+        console.log("repeat", inputs, body);
+        return body;
+    });
     // даём 2 балла, если есть бесконечный цикл или счётный цикл
-    if (foreverLoopRE.test(project.allScripts) ||
-        countLoopRE.test(project.allScripts)) {
+    if (foreverLoopCount > 0 || countLoopNumber > 0) {
         g.grade = gradesEnum.two;
     }
+    // ищем цикл с условием в котором есть условие и внутрение блоки
+    const repeatUntilLoopNumber = opcodeCount(jsonProject, "control_repeat_until", (b) => {
+        var _a, _b;
+        const inputs = b.inputs;
+        const hasStackAndCondition = "SUBSTACK" in inputs &&
+            ((_a = inputs === null || inputs === void 0 ? void 0 : inputs.SUBSTACK) === null || _a === void 0 ? void 0 : _a[1]) !== null &&
+            "CONDITION" in inputs &&
+            ((_b = inputs === null || inputs === void 0 ? void 0 : inputs.CONDITION) === null || _b === void 0 ? void 0 : _b[1]) !== null;
+        console.log("repeat_until", inputs, hasStackAndCondition);
+        return hasStackAndCondition;
+    });
     // даём 3 балла, если есть цикл с предусловием
-    if (untilLoopRE.test(project.allScripts)) {
+    if (repeatUntilLoopNumber > 0) {
         g.grade = gradesEnum.three;
     }
     return g;
@@ -305,7 +324,7 @@ function grader(jsonProject, project) {
      * Функция-агрегатор результатов оценивания по разным критериям
      */
     let res = new Map();
-    res.set("flow", flowGrader(project)); // оценка потока выполнения;
+    res.set("flow", flowGrader(jsonProject, project)); // оценка потока выполнения;
     res.set("data", dataRepresentationGrader(project)); // оценка представления данных
     res.set("logic", logicGrader(project)); // оценка использования логических операторов
     res.set("parallel", parallelismGrader(project)); // оценка параллелизма
