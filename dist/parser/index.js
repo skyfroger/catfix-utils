@@ -1,7 +1,7 @@
 /**
  * Вспомогательные функции для парсинга проекта
  */
-import { toScratchblocks } from "parse-sb3-blocks/dist/parse-sb3-blocks.cjs";
+import toScratchblocks from "parse-sb3-blocks/dist/parse-sb3-blocks.module";
 // список кодов для блоков-тригеров
 export const HAT_BLOCKS = [
     "event_whenflagclicked",
