@@ -1,5 +1,5 @@
 import { cloneSpriteRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, videoInteractionRE, waitCondAndBackdropRE, waitThinkSayRE, } from "./searchPatterns";
-import { validScriptsCount, opcodeCount } from "./utils";
+import { validScriptsCount, opcodeCount, opcodeCountArray } from "./utils";
 import { escapeSB } from "../parser";
 // список возможных оценок
 export var gradesEnum;
@@ -166,7 +166,7 @@ function logicGrader(jsonProject, project) {
     }
     return g;
 }
-function parallelismGrader(project) {
+function parallelismGrader(jsonProject, project) {
     /**
      * Параллельное выполнение скриптов
      */
@@ -175,18 +175,14 @@ function parallelismGrader(project) {
         maxGrade: gradesEnum.three,
     };
     // считаем, сколько спрайтов содержат скрипт, начинающийся с зелёного флажка
-    // todo возможно потом нужно будет учитывать и скрипты на сцене
-    const spritesWithGreenFlag = project.sprites.filter((spr) => {
-        return spr.allScripts.includes("when @greenFlag clicked");
-    });
-    if (spritesWithGreenFlag.length > 1) {
+    const greenFlagScripts = opcodeCount(jsonProject, "event_whenflagclicked");
+    if (greenFlagScripts > 1) {
         g.grade = gradesEnum.one;
     }
     // ищем спрайты, клик по которым запускает больше одного сприпта
-    const spritesWithClicks = project.sprites.filter((spr) => {
-        const clk = spr.allScripts.match(/when this sprite clicked/g);
-        return clk && clk.length > 1;
-    });
+    // фильтруем массив и оставляем только те элементы, в которых
+    // клик по спрайту встречается от двух раз
+    const spriteClickedHat = opcodeCountArray(jsonProject, "event_whenthisspriteclicked").filter((count) => count > 1).length;
     // ищем скрипты, которые запускаются по нажатию на клавишу
     const keyEventMatches = project.allScripts.matchAll(scriptsWithKeyPressEvent);
     // в множество сохраняем названия клавиш
@@ -204,7 +200,7 @@ function parallelismGrader(project) {
         // сохраняем в массиве keyFlag значение true, если найдено больше 1 скрипта
         keyFlag.push(Array.from(matches).length > 1);
     });
-    if (spritesWithClicks.length > 0 || keyFlag.includes(true)) {
+    if (spriteClickedHat > 0 || keyFlag.includes(true)) {
         g.grade = gradesEnum.two;
     }
     // даём 3 балла, если одно сообщение запускает больше 1 скрипта
@@ -379,7 +375,7 @@ function grader(jsonProject, project) {
     res.set("flow", flowGrader(jsonProject, project)); // оценка потока выполнения;
     res.set("data", dataRepresentationGrader(project)); // оценка представления данных
     res.set("logic", logicGrader(jsonProject, project)); // оценка использования логических операторов
-    res.set("parallel", parallelismGrader(project)); // оценка параллелизма
+    res.set("parallel", parallelismGrader(jsonProject, project)); // оценка параллелизма
     res.set("abstract", abstractGrader(project)); // оценка абстрактности
     res.set("sync", syncGrader(project)); // оценка синхронизации спрайтов
     res.set("interactivity", interactivityGrader(project)); // оценка интерактивности проекта

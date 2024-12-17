@@ -65,14 +65,40 @@ export function validScriptsCount(jsonProject) {
 export function opcodeCount(jsonProject, opCode, validator = (b) => true) {
     let count = 0;
     jsonProject.targets.forEach((target) => {
-        const blocks = target.blocks;
-        for (const key in blocks) {
-            if (blocks[key].opcode === opCode &&
-                validator(blocks[key]) &&
-                isBlockAlive(target, key)) {
-                count++;
-            }
-        }
+        count += opcodeCountAtTarget(target, opCode, validator);
     });
+    return count;
+}
+/**
+ * Сколько раз опкод встречается в каждом элементе по отдельности
+ * @param jsonProject код проекта
+ * @param opCode код операции
+ * @param validator функция валидации
+ * @returns массив
+ */
+export function opcodeCountArray(jsonProject, opCode, validator = (b) => true) {
+    const countArr = [];
+    jsonProject.targets.forEach((target) => {
+        countArr.push(opcodeCountAtTarget(target, opCode, validator));
+    });
+    return countArr;
+}
+/**
+ * Подсчёт количества блоков в заданном элементе
+ * @param target элемент
+ * @param opCode код операции
+ * @param validator функция-валидатор
+ * @returns количество блоков
+ */
+export function opcodeCountAtTarget(target, opCode, validator = (b) => true) {
+    let count = 0;
+    const blocks = target.blocks;
+    for (const key in blocks) {
+        if (blocks[key].opcode === opCode &&
+            validator(blocks[key]) &&
+            isBlockAlive(target, key)) {
+            count++;
+        }
+    }
     return count;
 }

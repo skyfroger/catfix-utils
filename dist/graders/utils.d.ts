@@ -20,3 +20,19 @@ export declare function validScriptsCount(jsonProject: ScratchProject): number;
  * @returns есть ли блок с указанным кодом операции внутри валидного скрипта
  */
 export declare function opcodeCount(jsonProject: ScratchProject, opCode: string, validator?: (block: Block) => boolean): number;
+/**
+ * Сколько раз опкод встречается в каждом элементе по отдельности
+ * @param jsonProject код проекта
+ * @param opCode код операции
+ * @param validator функция валидации
+ * @returns массив
+ */
+export declare function opcodeCountArray(jsonProject: ScratchProject, opCode: string, validator?: (block: Block) => boolean): Array<number>;
+/**
+ * Подсчёт количества блоков в заданном элементе
+ * @param target элемент
+ * @param opCode код операции
+ * @param validator функция-валидатор
+ * @returns количество блоков
+ */
+export declare function opcodeCountAtTarget(target: Target, opCode: string, validator?: (block: Block) => boolean): number;
