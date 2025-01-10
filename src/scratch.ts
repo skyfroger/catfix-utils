@@ -40,7 +40,11 @@ export type Block = {
         OPERAND1?: Array<string | number | null>;
         OPERAND2?: Array<string | number | null>;
     };
-    fields: JSONValue;
+    fields: {
+        KEY_OPTION?: Array<string | number | null>;
+        WHENGREATERTHANMENU?: Array<string | number | null>;
+        BROADCAST_OPTION?: Array<string | number | null>;
+    };
     shadow: boolean;
     topLevel: boolean;
     mutation: {
