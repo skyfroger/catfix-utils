@@ -134,3 +134,34 @@ export function opcodeCountAtTarget(
     }
     return count;
 }
+
+/**
+ * Получаем массив блоков по коду операции
+ * @param jsonProject код проекта
+ * @param opCode код операции
+ * @param isAliveBlocksOnly оставлять только "живые блоки"
+ * @param validator функция-валидатор
+ * @returns массив блоков
+ */
+export function filterBlocksByOpcode(
+    jsonProject: ScratchProject,
+    opCode: string,
+    validator: (block: Block) => boolean = (b: Block) => true,
+    isAliveBlocksOnly = true
+): Block[] {
+    const filterResult: Block[] = []; // итоговый массив блоков
+
+    jsonProject.targets.forEach((target) => {
+        const blocks = target.blocks;
+        for (const key in blocks) {
+            if (
+                blocks[key].opcode === opCode &&
+                validator(blocks[key]) &&
+                (isAliveBlocksOnly ? isBlockAlive(target, key) : true)
+            ) {
+                filterResult.push(blocks[key]);
+            }
+        }
+    });
+    return filterResult;
+}
