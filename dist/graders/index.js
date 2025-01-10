@@ -1,5 +1,5 @@
-import { cloneSpriteRE, mouseInteractionRE, roundVarsRE, scriptsWithKeyPressEvent, setVarsRE, videoInteractionRE, waitCondAndBackdropRE, waitThinkSayRE, } from "./searchPatterns";
-import { validScriptsCount, opcodeCount, opcodeCountArray } from "./utils";
+import { cloneSpriteRE, mouseInteractionRE, roundVarsRE, setVarsRE, videoInteractionRE, waitCondAndBackdropRE, waitThinkSayRE, } from "./searchPatterns";
+import { validScriptsCount, opcodeCount, opcodeCountArray, filterBlocksByOpcode, } from "./utils";
 import { escapeSB } from "../parser";
 // список возможных оценок
 export var gradesEnum;
@@ -183,55 +183,60 @@ function parallelismGrader(jsonProject, project) {
     // фильтруем массив и оставляем только те элементы, в которых
     // клик по спрайту встречается от двух раз
     const spriteClickedHat = opcodeCountArray(jsonProject, "event_whenthisspriteclicked").filter((count) => count > 1).length;
-    // ищем скрипты, которые запускаются по нажатию на клавишу
-    const keyEventMatches = project.allScripts.matchAll(scriptsWithKeyPressEvent);
-    // в множество сохраняем названия клавиш
-    const keys = new Set(Array.from(keyEventMatches).map((match) => {
-        // по индексу 1 будет храниться название клавиши
-        return match[1];
-    }));
-    // перебираем все клавиши и считает, сколько сприптов запускаеются по нажатию этой клавиши
-    let keyFlag = [];
-    keys.forEach((k) => {
-        // создаём RE которое содержит название очередной клавиши
-        const re = new RegExp(`when \\[${k}\\] key pressed::event`, "g");
-        // находим все скрипты стартующие по этой клавише
-        const matches = project.allScripts.matchAll(re);
-        // сохраняем в массиве keyFlag значение true, если найдено больше 1 скрипта
-        keyFlag.push(Array.from(matches).length > 1);
+    /*
+    Ищем блоки с запуском по нажатию клавиши, причём код клавиши
+    должен быть обязательно определён
+    */
+    const keyPressedBlocks = filterBlocksByOpcode(jsonProject, "event_whenkeypressed", (b) => {
+        var _a;
+        const fields = b.fields;
+        const hasOperands = "KEY_OPTION" in fields && ((_a = fields === null || fields === void 0 ? void 0 : fields.KEY_OPTION) === null || _a === void 0 ? void 0 : _a[0]) !== null;
+        return hasOperands;
     });
-    if (spriteClickedHat > 0 || keyFlag.includes(true)) {
+    // получаем массив используемых клавиш
+    const keysUsed = keyPressedBlocks
+        .map((b) => {
+        var _a;
+        const fields = b.fields;
+        return (_a = fields === null || fields === void 0 ? void 0 : fields.KEY_OPTION) === null || _a === void 0 ? void 0 : _a[0];
+    })
+        .sort();
+    // запускает ли одна клавиша больше одного скрипта
+    const isOneKeyFireMultipleScripts = keysUsed.length > new Set(keysUsed).size;
+    if (spriteClickedHat > 0 || isOneKeyFireMultipleScripts) {
         g.grade = gradesEnum.two;
     }
+    /*
+    Запускается ли больше одного скрипта по смене фона
+    */
+    const isBackdropSwitching = opcodeCount(jsonProject, "event_whenbackdropswitchesto") > 1;
+    /*
+    Запускается ли больше одного скрипта по смене громкости
+    */
+    const isLoudnessChanging = opcodeCount(jsonProject, "event_whengreaterthan", (b) => {
+        var _a;
+        const fields = b.fields;
+        const hasLoudnessField = "WHENGREATERTHANMENU" in fields &&
+            ((_a = fields === null || fields === void 0 ? void 0 : fields.WHENGREATERTHANMENU) === null || _a === void 0 ? void 0 : _a[0]) === "LOUDNESS";
+        return hasLoudnessField;
+    }) > 1;
+    console.log(project.broadcasts);
     // даём 3 балла, если одно сообщение запускает больше 1 скрипта
-    let automaticHatsFlag = [];
-    project.broadcasts.forEach((b) => {
-        try {
-            // создаём RE которое содержит название очередного сообщения
-            const re = new RegExp(`when I receive \\[${b} v\\]`, "g");
-            // находим все скрипты стартующие по этому сообщению
-            const matches = project.allScripts.matchAll(re);
-            // сохраняем в массиве broadcastsFlag значение true, если найдено больше 1 скрипта
-            automaticHatsFlag.push(Array.from(matches).length > 1);
+    let isBroadcastsUsed = false;
+    // перебираем все названия сообщений
+    project.broadcasts.forEach((message) => {
+        const currentBroadcastBlocks = filterBlocksByOpcode(jsonProject, "event_whenbroadcastreceived", (b) => {
+            var _a;
+            const fields = b.fields;
+            const hasMessage = "BROADCAST_OPTION" in fields &&
+                ((_a = fields === null || fields === void 0 ? void 0 : fields.BROADCAST_OPTION) === null || _a === void 0 ? void 0 : _a[0]) === message;
+            return hasMessage;
+        });
+        if (currentBroadcastBlocks.length > 1) {
+            isBroadcastsUsed = true;
         }
-        catch (e) { }
     });
-    try {
-        const loudnessChangeRE = new RegExp("when \\[loudness v\\].+\\n", "g");
-        // Считаем количество "шапок" срабатывающих по смене громкости
-        const loudnessChangeHats = project.allScripts.matchAll(loudnessChangeRE);
-        const timerChangeRE = new RegExp("when \\[timer v\\].+\\n", "g");
-        // Считаем количество "шапок" срабатывающих по смене таймера
-        const timerChangeHats = project.allScripts.matchAll(timerChangeRE);
-        const backdropChangeRE = new RegExp("when backdrop switches to [.+ v]\n", "g");
-        // Считаем количество "шапок" срабатывающих по смене фона
-        const backdropChangeHats = project.allScripts.matchAll(backdropChangeRE);
-        automaticHatsFlag.push(Array.from(loudnessChangeHats).length > 1 ||
-            Array.from(timerChangeHats).length > 1 ||
-            Array.from(backdropChangeHats).length > 1);
-    }
-    catch (e) { }
-    if (automaticHatsFlag.includes(true)) {
+    if (isBroadcastsUsed || isLoudnessChanging || isBackdropSwitching) {
         g.grade = gradesEnum.three;
     }
     return g;

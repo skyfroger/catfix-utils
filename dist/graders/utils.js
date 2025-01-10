@@ -102,3 +102,25 @@ export function opcodeCountAtTarget(target, opCode, validator = (b) => true) {
     }
     return count;
 }
+/**
+ * Получаем массив блоков по коду операции
+ * @param jsonProject код проекта
+ * @param opCode код операции
+ * @param isAliveBlocksOnly оставлять только "живые блоки"
+ * @param validator функция-валидатор
+ * @returns массив блоков
+ */
+export function filterBlocksByOpcode(jsonProject, opCode, validator = (b) => true, isAliveBlocksOnly = true) {
+    const filterResult = []; // итоговый массив блоков
+    jsonProject.targets.forEach((target) => {
+        const blocks = target.blocks;
+        for (const key in blocks) {
+            if (blocks[key].opcode === opCode &&
+                validator(blocks[key]) &&
+                (isAliveBlocksOnly ? isBlockAlive(target, key) : true)) {
+                filterResult.push(blocks[key]);
+            }
+        }
+    });
+    return filterResult;
+}

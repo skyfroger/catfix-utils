@@ -36,3 +36,12 @@ export declare function opcodeCountArray(jsonProject: ScratchProject, opCode: st
  * @returns количество блоков
  */
 export declare function opcodeCountAtTarget(target: Target, opCode: string, validator?: (block: Block) => boolean): number;
+/**
+ * Получаем массив блоков по коду операции
+ * @param jsonProject код проекта
+ * @param opCode код операции
+ * @param isAliveBlocksOnly оставлять только "живые блоки"
+ * @param validator функция-валидатор
+ * @returns массив блоков
+ */
+export declare function filterBlocksByOpcode(jsonProject: ScratchProject, opCode: string, validator?: (block: Block) => boolean, isAliveBlocksOnly?: boolean): Block[];
