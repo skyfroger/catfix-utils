@@ -7,7 +7,6 @@ import {
     setVarsRE,
     videoInteractionRE,
     waitCondAndBackdropRE,
-    waitThinkSayRE,
 } from "./searchPatterns";
 import {
     validScriptsCount,
@@ -79,7 +78,6 @@ function flowGrader(
         (b: Block) => {
             const inputs = b.inputs;
             const body = "SUBSTACK" in inputs && inputs?.SUBSTACK?.[1] !== null;
-            console.log("repeat", inputs, body);
             return body;
         }
     );
@@ -100,7 +98,6 @@ function flowGrader(
                 inputs?.SUBSTACK?.[1] !== null &&
                 "CONDITION" in inputs &&
                 inputs?.CONDITION?.[1] !== null;
-            console.log("repeat_until", inputs, hasStackAndCondition);
             return hasStackAndCondition;
         }
     );
@@ -332,8 +329,6 @@ function parallelismGrader(
             return hasLoudnessField;
         }) > 1;
 
-    console.log(project.broadcasts);
-
     // даём 3 балла, если одно сообщение запускает больше 1 скрипта
     let isBroadcastsUsed = false;
     // перебираем все названия сообщений
@@ -464,37 +459,47 @@ function abstractGrader(project: Project): graderResult {
     return g;
 }
 
-function syncGrader(project: Project): graderResult {
+function syncGrader(
+    jsonProject: ScratchProject,
+    project: Project
+): graderResult {
     let g: graderResult = {
         grade: gradesEnum.zero,
         maxGrade: gradesEnum.three,
     };
 
     // даём 1 балл, если есть блок ждать n секунд, говорить n секунд или думать n секунд
-    if (waitThinkSayRE.test(project.allScripts)) {
+    const isWaitUsed = opcodeCount(jsonProject, "control_wait");
+    const isSayUsed = opcodeCount(jsonProject, "looks_sayforsecs");
+    const isThinkUsed = opcodeCount(jsonProject, "looks_thinkforsecs");
+
+    if (isWaitUsed || isSayUsed || isThinkUsed) {
         g.grade = gradesEnum.one;
     }
 
-    // проверяем список сообщений: каждое должно быть отправлено и получено хотя бы 1 раз
-    let broadcastsFlag: boolean[] = [];
-    project.broadcasts.forEach((b) => {
-        const escapedBroadcast = escapeSB(b);
-        broadcastsFlag.push(
-            (project.allScripts.includes(`broadcast [${escapedBroadcast} v]`) ||
-                project.allScripts.includes(
-                    `broadcast [${escapedBroadcast} v] and wait`
-                )) &&
-                project.allScripts.includes(
-                    `when I receive [${escapedBroadcast} v]`
-                )
-        );
-    });
-    if (broadcastsFlag.includes(true)) {
+    // запуск по сообщению
+    const isBroadcastReceived =
+        opcodeCount(jsonProject, "event_whenbroadcastreceived") > 0;
+    const isBroadcast = opcodeCount(jsonProject, "event_broadcast") > 0;
+    const isBroadcastAndWait =
+        opcodeCount(jsonProject, "event_broadcastandwait") > 0;
+
+    if (isBroadcastReceived && (isBroadcast || isBroadcastAndWait)) {
         g.grade = gradesEnum.two;
     }
 
     // даём 3 балла за блок Ждать до и обработку события смены фона
-    if (waitCondAndBackdropRE.test(project.allScripts)) {
+    const isWaiUntiltUsed =
+        opcodeCount(jsonProject, "control_wait_until", (b: Block) => {
+            const inputs = b.inputs;
+            const hasCondition = "CONDITION" in inputs;
+            return hasCondition;
+        }) > 0;
+
+    const isBackdropChangedUsed =
+        opcodeCount(jsonProject, "event_whenbackdropswitchesto") > 0;
+
+    if (isWaiUntiltUsed || isBackdropChangedUsed) {
         g.grade = gradesEnum.three;
     }
 
@@ -559,7 +564,7 @@ function grader(
     res.set("logic", logicGrader(jsonProject, project)); // оценка использования логических операторов
     res.set("parallel", parallelismGrader(jsonProject, project)); // оценка параллелизма
     res.set("abstract", abstractGrader(project)); // оценка абстрактности
-    res.set("sync", syncGrader(project)); // оценка синхронизации спрайтов
+    res.set("sync", syncGrader(jsonProject, project)); // оценка синхронизации спрайтов
     res.set("interactivity", interactivityGrader(project)); // оценка интерактивности проекта
 
     return res;
