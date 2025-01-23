@@ -36,11 +36,17 @@ export type Block = {
         STRING?: Params;
         STRING1?: Params;
         STRING2?: Params;
+        NUM: Params;
+        NUM1?: Params;
+        NUM2?: Params;
+        FROM?: Params;
+        TO?: Params;
     };
     fields: {
         KEY_OPTION?: Params;
         WHENGREATERTHANMENU?: Params;
         BROADCAST_OPTION?: Params;
+        OPERATOR?: Params;
     };
     shadow: boolean;
     topLevel: boolean;

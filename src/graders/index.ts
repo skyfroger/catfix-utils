@@ -563,6 +563,55 @@ function mathGrader(
         maxGrade: gradesEnum.three,
     };
 
+    let isSimpleArithmeticOpUsed = false;
+    // использование простых арифметических операторов
+    [
+        "operator_add",
+        "operator_subtract",
+        "operator_multiply",
+        "operator_divide",
+    ].forEach((opCode) => {
+        if (opcodeCount(jsonProject, opCode) > 0) {
+            isSimpleArithmeticOpUsed = true;
+        }
+    });
+
+    if (isSimpleArithmeticOpUsed) {
+        g.grade = gradesEnum.one;
+    }
+
+    // используются случайные числа
+    if (opcodeCount(jsonProject, "operator_random") > 0) {
+        g.grade = gradesEnum.two;
+    }
+
+    let isComplexMathOpUsed = false;
+    // использование математических функций, round, mod
+    ["operator_round", "operator_mathop", "operator_mod"].forEach((opCode) => {
+        if (opcodeCount(jsonProject, opCode) > 0) {
+            isComplexMathOpUsed = true;
+        }
+    });
+
+    if (isComplexMathOpUsed) {
+        g.grade = gradesEnum.three;
+    }
+
+    return g;
+}
+
+function stringsGrader(
+    jsonProject: ScratchProject,
+    project: Project
+): graderResult {
+    /**
+     * Строковые блоки
+     */
+    let g: graderResult = {
+        grade: gradesEnum.zero,
+        maxGrade: gradesEnum.two,
+    };
+
     let isSimpleStringOpUsed = false;
     // проверяем чтобы хотябы один из опкодов из списка был в проекте
     ["operator_letter_of", "operator_join", "operator_length"].forEach(
@@ -581,21 +630,6 @@ function mathGrader(
     if (opcodeCount(jsonProject, "operator_contains") > 0) {
         g.grade = gradesEnum.two;
     }
-
-    return g;
-}
-
-function stringsGrader(
-    jsonProject: ScratchProject,
-    project: Project
-): graderResult {
-    /**
-     * Строковые блоки
-     */
-    let g: graderResult = {
-        grade: gradesEnum.zero,
-        maxGrade: gradesEnum.two,
-    };
 
     return g;
 }
