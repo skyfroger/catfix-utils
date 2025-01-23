@@ -1,6 +1,6 @@
 import { Project } from "../parsedProject";
 import { ScratchProject } from "../scratch";
-export type categories = "flow" | "data" | "logic" | "parallel" | "abstract" | "sync" | "interactivity";
+export type categories = "flow" | "data" | "logic" | "parallel" | "abstract" | "sync" | "interactivity" | "math" | "strings";
 export declare enum gradesEnum {
     zero = 0,
     one = 1,

@@ -4,6 +4,7 @@
 type JSONValue = string | number | boolean | undefined | null | {
     [x: string]: JSONValue;
 } | Array<JSONValue>;
+type Params = Array<string | number | null | Params>;
 type Monitor = {
     id: string;
     mode: string;
@@ -24,18 +25,22 @@ export type Block = {
     next?: string;
     parent?: string;
     inputs: {
-        INPUTS?: Array<string | number | null>;
-        SUBSTACK?: Array<string | number | null>;
-        SUBSTACK2?: Array<string | number | null>;
-        CONDITION?: Array<string | number | null>;
-        OPERAND?: Array<string | number | null>;
-        OPERAND1?: Array<string | number | null>;
-        OPERAND2?: Array<string | number | null>;
+        INPUTS?: Params;
+        SUBSTACK?: Params;
+        SUBSTACK2?: Params;
+        CONDITION?: Params;
+        OPERAND?: Params;
+        OPERAND1?: Params;
+        OPERAND2?: Params;
+        LETTER?: Params;
+        STRING?: Params;
+        STRING1?: Params;
+        STRING2?: Params;
     };
     fields: {
-        KEY_OPTION?: Array<string | number | null>;
-        WHENGREATERTHANMENU?: Array<string | number | null>;
-        BROADCAST_OPTION?: Array<string | number | null>;
+        KEY_OPTION?: Params;
+        WHENGREATERTHANMENU?: Params;
+        BROADCAST_OPTION?: Params;
     };
     shadow: boolean;
     topLevel: boolean;

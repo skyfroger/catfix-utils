@@ -374,6 +374,40 @@ function interactivityGrader(project) {
     }
     return g;
 }
+function mathGrader(jsonProject, project) {
+    /**
+     * Математические операторы
+     */
+    let g = {
+        grade: gradesEnum.zero,
+        maxGrade: gradesEnum.three,
+    };
+    let isSimpleStringOpUsed = false;
+    // проверяем чтобы хотябы один из опкодов из списка был в проекте
+    ["operator_letter_of", "operator_join", "operator_length"].forEach((opCode) => {
+        if (opcodeCount(jsonProject, opCode) > 0) {
+            isSimpleStringOpUsed = true;
+        }
+    });
+    if (isSimpleStringOpUsed) {
+        g.grade = gradesEnum.one;
+    }
+    // используется ли блок Содержит
+    if (opcodeCount(jsonProject, "operator_contains") > 0) {
+        g.grade = gradesEnum.two;
+    }
+    return g;
+}
+function stringsGrader(jsonProject, project) {
+    /**
+     * Строковые блоки
+     */
+    let g = {
+        grade: gradesEnum.zero,
+        maxGrade: gradesEnum.two,
+    };
+    return g;
+}
 function grader(jsonProject, project) {
     /**
      * Функция-агрегатор результатов оценивания по разным критериям
@@ -386,6 +420,8 @@ function grader(jsonProject, project) {
     res.set("abstract", abstractGrader(project)); // оценка абстрактности
     res.set("sync", syncGrader(jsonProject, project)); // оценка синхронизации спрайтов
     res.set("interactivity", interactivityGrader(project)); // оценка интерактивности проекта
+    res.set("math", mathGrader(jsonProject, project)); // оценка математических выражений
+    res.set("strings", stringsGrader(jsonProject, project)); // оценка использования строковых блоков
     return res;
 }
 /**

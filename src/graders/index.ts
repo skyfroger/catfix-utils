@@ -6,7 +6,6 @@ import {
     roundVarsRE,
     setVarsRE,
     videoInteractionRE,
-    waitCondAndBackdropRE,
 } from "./searchPatterns";
 import {
     validScriptsCount,
@@ -28,7 +27,9 @@ export type categories =
     | "parallel"
     | "abstract"
     | "sync"
-    | "interactivity";
+    | "interactivity"
+    | "math"
+    | "strings";
 
 // список возможных оценок
 export enum gradesEnum {
@@ -550,6 +551,55 @@ function interactivityGrader(project: Project): graderResult {
     return g;
 }
 
+function mathGrader(
+    jsonProject: ScratchProject,
+    project: Project
+): graderResult {
+    /**
+     * Математические операторы
+     */
+    let g: graderResult = {
+        grade: gradesEnum.zero,
+        maxGrade: gradesEnum.three,
+    };
+
+    let isSimpleStringOpUsed = false;
+    // проверяем чтобы хотябы один из опкодов из списка был в проекте
+    ["operator_letter_of", "operator_join", "operator_length"].forEach(
+        (opCode) => {
+            if (opcodeCount(jsonProject, opCode) > 0) {
+                isSimpleStringOpUsed = true;
+            }
+        }
+    );
+
+    if (isSimpleStringOpUsed) {
+        g.grade = gradesEnum.one;
+    }
+
+    // используется ли блок Содержит
+    if (opcodeCount(jsonProject, "operator_contains") > 0) {
+        g.grade = gradesEnum.two;
+    }
+
+    return g;
+}
+
+function stringsGrader(
+    jsonProject: ScratchProject,
+    project: Project
+): graderResult {
+    /**
+     * Строковые блоки
+     */
+    let g: graderResult = {
+        grade: gradesEnum.zero,
+        maxGrade: gradesEnum.two,
+    };
+
+    return g;
+}
+
 function grader(
     jsonProject: ScratchProject,
     project: Project
@@ -566,6 +616,8 @@ function grader(
     res.set("abstract", abstractGrader(project)); // оценка абстрактности
     res.set("sync", syncGrader(jsonProject, project)); // оценка синхронизации спрайтов
     res.set("interactivity", interactivityGrader(project)); // оценка интерактивности проекта
+    res.set("math", mathGrader(jsonProject, project)); // оценка математических выражений
+    res.set("strings", stringsGrader(jsonProject, project)); // оценка использования строковых блоков
 
     return res;
 }
